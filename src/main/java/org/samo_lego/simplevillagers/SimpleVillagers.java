@@ -67,7 +67,7 @@ public class SimpleVillagers implements ModInitializer {
             content.accept(BREEDER_BLOCK.asItem());
             content.accept(CONVERTER_BLOCK.asItem());
             content.accept(INCUBATOR_BLOCK.asItem());
-            // todo content.accept(TRADING_BLOCK.asItem());
+            content.accept(TRADING_BLOCK.asItem());
         });
     }
 

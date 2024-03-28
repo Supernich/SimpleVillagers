@@ -48,8 +48,10 @@ public class TradingBlockEntity extends AbstractFarmBlockEntity {
 
     @Override
     public void serverTick() {
-        if (this.canOperate() && this.villager != null) {
-            if (((AVillager) this.villager).increaseLevelOnTick()) {
+        if (this.villager == null) {
+            this.prepareVillager();
+        } else {
+            if (this.canOperate() && ((AVillager) this.villager).increaseLevelOnTick()) {
                 // Increase villager level
                 this.villager.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 200, 0));
 
@@ -74,31 +76,30 @@ public class TradingBlockEntity extends AbstractFarmBlockEntity {
                 this.restockDay = gameTime / 24000L;
                 this.restockTime = gameTime % 24000L;
             }
-        } else if (this.villager == null && this.canOperate()) {
-            this.prepareVillager();
         }
     }
 
 
     @Override
     public void onUse(ServerPlayer player) {
-        if (this.canOperate() && this.villager != null && !player.isShiftKeyDown()) {
-
-            ((AVillager) this.villager).callUpdateSpecialPrices(player);
-            this.villager.setTradingPlayer(player);
-            this.villager.openTradingScreen(player, this.villager.getDisplayName(), this.villager.getVillagerData().getLevel());
-
-            player.awardStat(Stats.TALKED_TO_VILLAGER);
-        } else {
+        // If holding shift - open gui
+        if (player.isShiftKeyDown()) {
             final ItemStack left = new ItemStack(VILLAGER_ITEM);
             left.setHoverName(Component.translatable(EntityType.VILLAGER.getDescriptionId()).append(" ->"));
             left.enchant(null, 0);
 
             final ItemStack right = new ItemStack(Items.LECTERN);
-            right.setHoverName(Component.translatable("todo").append(" ->"));
+            right.setHoverName(Component.translatable("container.simplevillagers.trader.workstation").append(" ->"));
             right.enchant(null, 0);
 
             new VillagerBlockGui(MenuType.GENERIC_9x1, player, this, List.of(Pair.of(left, 1), Pair.of(right, 1)), this::getSlot).open();
+        } else if (this.canOperate() && this.villager != null) {
+            // If villager present - open trade
+            ((AVillager) this.villager).callUpdateSpecialPrices(player);
+            this.villager.setTradingPlayer(player);
+            this.villager.openTradingScreen(player, this.villager.getDisplayName(), this.villager.getVillagerData().getLevel());
+
+            player.awardStat(Stats.TALKED_TO_VILLAGER);
         }
     }
 
@@ -116,9 +117,11 @@ public class TradingBlockEntity extends AbstractFarmBlockEntity {
         if (!profBlock.isEmpty() && canOperate) {
             var poiType = PoiTypes.forState(((BlockItem) profBlock.getItem()).getBlock().defaultBlockState());
             // set villager profession from poi type
-            poiType.flatMap(holder -> BuiltInRegistries.VILLAGER_PROFESSION.stream().filter(villagerProfession ->
-                    villagerProfession.heldJobSite().test(holder)).findFirst()).ifPresent(villagerProfession ->
-                        this.activeProfession = villagerProfession);
+            poiType.flatMap(
+                holder -> BuiltInRegistries.VILLAGER_PROFESSION.stream()
+                    .filter(villagerProfession -> villagerProfession.heldJobSite().test(holder))
+                    .findFirst()
+            ).ifPresent(villagerProfession -> this.activeProfession = villagerProfession);
 
             canOperate = this.activeProfession != VillagerProfession.NONE;
         } else {
@@ -133,8 +136,8 @@ public class TradingBlockEntity extends AbstractFarmBlockEntity {
                 // Try to set villager profession
                 this.prepareVillager();
             }
-            super.updateEmptyStatus(index);
         }
+        super.updateEmptyStatus(index);
     }
 
     private void prepareVillager() {
@@ -161,7 +164,6 @@ public class TradingBlockEntity extends AbstractFarmBlockEntity {
 
             if (stack.getItem() == VILLAGER_ITEM) {
                 VillagerUtil.saveVillager(this.villager, stack, false);
-                System.out.println(villager.getVillagerXp());
                 this.setOperative(false);
                 this.villager = null;
             }
@@ -180,7 +182,6 @@ public class TradingBlockEntity extends AbstractFarmBlockEntity {
 
             if (itemStack.getItem() == VILLAGER_ITEM) {
                 VillagerUtil.saveVillager(this.villager, itemStack, false);
-                System.out.println(villager.getVillagerXp());
                 this.villager = null;
             }
         }

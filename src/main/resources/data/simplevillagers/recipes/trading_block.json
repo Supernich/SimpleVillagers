@@ -2,25 +2,22 @@
     "type": "minecraft:crafting_shaped",
     "pattern": [
         "###",
-        "#R#",
-        "iAi"
+        "#r#",
+        "iii"
     ],
     "key": {
         "#": {
             "item": "minecraft:glass_pane"
         },
-        "R": {
-            "item": "minecraft:lava_bucket"
+        "r": {
+            "item": "minecraft:redstone"
         },
         "i": {
             "item": "minecraft:iron_ingot"
-        },
-        "A": {
-            "item": "minecraft:stone"
         }
     },
     "result": {
-        "item": "simplevillagers:iron_farm_block",
+        "item": "simplevillagers:trading_block",
         "count": 1
     }
 }
